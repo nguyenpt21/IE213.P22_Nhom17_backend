@@ -4,14 +4,13 @@ import TourBooking from "../models/tourBooking.js";
 import Tour from "../models/tour.js";
 import Ticket from "../models/ticket.js";
 import mongoose from "mongoose";
-import { CLOUDINARY_BASE_URL } from "../../frontend/src/constants/hotel.js";
 import HotelBooking from "../models/hotelBooking.js";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat.js";
 dayjs.extend(customParseFormat);
 
 dotenv.config();
-
+const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dytiq61hf/image/upload/v1744375449";
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 const createTourCheckoutSession = async (req, res) => {
