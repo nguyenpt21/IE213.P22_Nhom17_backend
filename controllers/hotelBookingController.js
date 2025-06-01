@@ -69,7 +69,7 @@ const cancelBooking = async (req, res) => {
             return res.status(403).json({ message: "Không cho phép huỷ" });
         }
 
-        booking.bookingStatus = "canceled";
+        booking.bookingStatus = "cancelled";
         await booking.save();
         res.json({ message: "Huỷ thành công", booking });
     } catch (error) {
@@ -114,9 +114,9 @@ const getBookingsByHotel = async (req, res) => {
     try {
         const { hotelId } = req.params;
         const { limit = 10, page = 1 } = req.query;
-        
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
-        
+
         const bookings = await HotelBooking.find({ hotelId })
             .populate("userId", "firstName lastName email")
             .populate("hotelId", "name address")
@@ -124,9 +124,9 @@ const getBookingsByHotel = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(parseInt(limit));
-            
+
         const total = await HotelBooking.countDocuments({ hotelId });
-        
+
         res.json({
             bookings,
             total,
@@ -140,11 +140,47 @@ const getBookingsByHotel = async (req, res) => {
     }
 };
 
+const getHotelBookings = async (req, res) => {
+    try {
+        const { bookingStatus, page, limit } = req.query;
+
+        const pageNumber = Number(page) || 1;
+        const pageSize = Number(limit) || 5;
+        const skip = (pageNumber - 1) * pageSize;
+
+        const filter = {};
+        if (bookingStatus !== 'all') {
+            filter.bookingStatus = bookingStatus;
+        }
+
+        const total = await HotelBooking.countDocuments(filter);
+
+        const bookings = await HotelBooking.find(filter)
+            .populate('userId', 'firstName lastName')
+            .populate('hotelId', 'name')
+            .populate('roomTypeId', 'name')
+            .skip(skip)
+            .limit(pageSize);
+
+        res.json({
+            bookings,
+            total,
+            currentPage: pageNumber,
+            pageSize: pageSize,
+            totalPages: Math.ceil(total / pageSize)
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Lỗi server" });
+    }
+}
+
 export {
     createBooking,
     updateBookingStatus,
     cancelBooking,
     deleteBooking,
     getMyBookings,
-    getBookingsByHotel
+    getBookingsByHotel,
+    getHotelBookings
 };

@@ -13,6 +13,7 @@ dotenv.config();
 const CLOUDINARY_BASE_URL = "https://res.cloudinary.com/dytiq61hf/image/upload/v1744375449";
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const CLIENT_URL = process.env.CLIENT_URL
 const createTourCheckoutSession = async (req, res) => {
     const { ticketName, tourName, quantities, ...tourBooking } =
         req.body;

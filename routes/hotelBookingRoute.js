@@ -4,11 +4,13 @@ import {
     updateBookingStatus,
     cancelBooking,
     getMyBookings,
-    getBookingsByHotel
+    getBookingsByHotel,
+    getHotelBookings
 } from "../controllers/hotelBookingController.js";
 import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
+router.get("/bookings", getHotelBookings);
 router.get('/', protect, getMyBookings);
 router.get('/hotel/:hotelId', protect, getBookingsByHotel);
 router.post("/", createBooking);

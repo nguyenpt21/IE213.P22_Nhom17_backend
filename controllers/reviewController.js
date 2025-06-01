@@ -135,7 +135,7 @@ const getOrderCanReview = async (req, res) => {
 
         const bookings = await HotelBooking.find({
             userId,
-            bookingStatus: { $nin: ['pending', 'canceled'] },
+            bookingStatus: { $nin: ['pending', 'cancelled'] },
             isReviewed: { $ne: "yes" },
             checkout: { $lte: today }
         }).populate("hotelId", "name img");
@@ -158,7 +158,7 @@ const getTourOrderCanReview = async (req, res) => {
 
         const tourBookings = await TourBooking.find({
             userId,
-            bookingStatus: { $nin: ['pending', 'canceled'] },
+            bookingStatus: { $nin: ['pending', 'cancelled'] },
             isReviewed: { $ne: "yes" },
             useDate: { $lte: today }
         }).populate("tourId", "name images");

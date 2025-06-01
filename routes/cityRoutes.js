@@ -15,7 +15,10 @@ const router = express.Router();
 const upload = multer({ 
     storage: multer.memoryStorage(),
     fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+        // Cho phép dummy file để đảm bảo multipart detection
+        if (file.fieldname === 'dummy') {
+            cb(null, true);
+        } else if (file.mimetype.startsWith('image/')) {
             cb(null, true);
         } else {
             cb(new Error('Chỉ chấp nhận file hình ảnh!'), false);

@@ -13,6 +13,7 @@ dotenv.config();
 
 const CLIENT_URL = process.env.CLIENT_URL
 
+
 const getAccessToken = async () => {
     const auth = Buffer.from(
         `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
