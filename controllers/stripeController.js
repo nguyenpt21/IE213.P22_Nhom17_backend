@@ -39,8 +39,8 @@ const createTourCheckoutSession = async (req, res) => {
             },
             mode: "payment",
             success_url:
-                "http://localhost:5173/checkout-stripe-success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url: `http://localhost:5173/tour/${tourBooking.tourId}`,
+                `${CLIENT_URL}/checkout-stripe-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${CLIENT_URL}/tour/${tourBooking.tourId}`,
         });
 
         res.json({ url: session.url });
@@ -74,7 +74,7 @@ const createHotelCheckoutSession = async (req, res) => {
             roomTypeId,
             roomId,
         }).toString();
-        const cancelUrl = `http://localhost:5173/hotels/${hotelBooking.hotelId}?${queryString}`;
+        const cancelUrl = `${CLIENT_URL}/hotels/${hotelBooking.hotelId}?${queryString}`;
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ["card"],
@@ -97,7 +97,7 @@ const createHotelCheckoutSession = async (req, res) => {
             },
             mode: "payment",
             success_url:
-                "http://localhost:5173/checkout-stripe-success?session_id={CHECKOUT_SESSION_ID}",
+                `${CLIENT_URL}/checkout-stripe-success?session_id={CHECKOUT_SESSION_ID}`,
             cancel_url: cancelUrl,
         });
 

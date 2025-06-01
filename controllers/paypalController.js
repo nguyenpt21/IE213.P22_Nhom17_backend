@@ -11,6 +11,8 @@ dayjs.extend(customParseFormat);
 
 dotenv.config();
 
+const CLIENT_URL = process.env.CLIENT_URL
+
 const getAccessToken = async () => {
     const auth = Buffer.from(
         `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
@@ -59,8 +61,8 @@ export const createTourPaypalOrder = async (req, res) => {
                     ],
                     application_context: {
                         return_url:
-                            "http://localhost:5173/tour-checkout-success",
-                        cancel_url: `http://localhost:5173/tour/${tourId}`,
+                            `${CLIENT_URL}/tour-checkout-success`,
+                        cancel_url: `${CLIENT_URL}/tour/${tourId}`,
                     },
                 }),
             }
@@ -169,7 +171,7 @@ export const createHotelPaypalOrder = async (req, res) => {
         roomId,
     }).toString();
 
-    const cancelUrl = `http://localhost:5173/hotels/${hotelId}?${queryString}`;
+    const cancelUrl = `${CLIENT_URL}/hotels/${hotelId}?${queryString}`;
 
     try {
         const accessToken = await getAccessToken();
@@ -193,7 +195,7 @@ export const createHotelPaypalOrder = async (req, res) => {
                     ],
                     application_context: {
                         return_url:
-                            "http://localhost:5173/hotel-checkout-success",
+                            `${CLIENT_URL}/hotel-checkout-success`,
                         cancel_url: cancelUrl,
                     },
                 }),
