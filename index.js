@@ -38,6 +38,8 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
+
+console.log(process.env.CLIENT_URL)
 const corsOptions = {
     origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
