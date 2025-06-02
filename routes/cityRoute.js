@@ -1,40 +1,42 @@
 import express from "express";
-import multer from 'multer';
+import multer from "multer";
 import {
     listCity,
     addCity,
-    addPopularPlace,
     removeCity,
     removePopularPlace,
     updateCity,
-    getCityById
+    getCityById,
 } from "../controllers/cityController.js";
-import { verifyAdminToken } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Cấu hình multer để xử lý upload file trong memory
-const upload = multer({ storage: multer.memoryStorage() });
+// Cấu hình multer để lưu file trong memory
+const upload = multer({
+    storage: multer.memoryStorage(),
+    fileFilter: (req, file, cb) => {
+        // Cho phép dummy file để đảm bảo multipart detection
+        if (file.fieldname === "dummy") {
+            cb(null, true);
+        } else if (file.mimetype.startsWith("image/")) {
+            cb(null, true);
+        } else {
+            cb(new Error("Chỉ chấp nhận file hình ảnh!"), false);
+        }
+    },
+});
 
-// Route public: lấy chi tiết thành phố
-router.get('/:cityId', getCityById);
+// Route public: lấy chi tiết thành phố theo ID (phải đặt trước các route khác)
+router.get("/:cityId", getCityById);
 
-// Áp dụng middleware xác thực admin cho các routes cần bảo vệ
-router.use(verifyAdminToken);
+// Routes cho thành phố
+router.route("/").get(listCity).post(upload.any(), addCity); // Sử dụng upload.any() để xử lý nhiều loại file
 
-// Routes
-router.get("/", listCity); // Lấy danh sách thành phố
-router.post("/", upload.array('images'), addCity); // Thêm thành phố mới
+// Routes admin cho thành phố cụ thể
+router.delete("/:cityId", removeCity);
+router.put("/:cityId", upload.any(), updateCity);
 
-router.route('/:cityId')
-    .delete(removeCity); // Xóa thành phố
-
-router.route('/:cityId/popular-places')
-    .post(upload.single('image'), addPopularPlace); // Thêm địa điểm nổi tiếng
-
-router.route('/:cityId/popular-places/:placeId')
-    .delete(removePopularPlace); // Xóa địa điểm nổi tiếng
-
-router.put('/update/:cityId', updateCity); // Thêm route update city
+// Route xóa địa điểm nổi bật
+router.route("/:cityId/popular-places/:placeId").delete(removePopularPlace);
 
 export default router;
