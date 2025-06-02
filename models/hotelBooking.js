@@ -5,21 +5,20 @@ const hotelBookingSchema = new mongoose.Schema(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true
         },
         hotelId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Hotel",
-            required: true
+            required: true,
         },
         roomTypeId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "HotelRoomType",
-            required: true
+            required: true,
         },
         roomId: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true
+            required: true,
         },
         name: { type: String, required: true },
         email: { type: String, required: true },
@@ -33,14 +32,14 @@ const hotelBookingSchema = new mongoose.Schema(
         bookingStatus: {
             type: String,
             // enum: ["pending", "confirmed", "cancelled"],
-            default: "pending"
+            default: "pending",
         },
         isReviewed: {
             type: String,
             // enum: ["yes", "no"],
-            default: "no"
+            default: "no",
         },
-        stripeSessionId: String
+        stripeSessionId: String,
     },
     { timestamps: true }
 );
