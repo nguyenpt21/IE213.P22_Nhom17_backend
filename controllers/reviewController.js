@@ -154,7 +154,7 @@ const getTourOrderCanReview = async (req, res) => {
             return res.status(400).json({ message: "Missing userId" });
         }
 
-        const today = new Date();
+        const today = new Date(2025, 5, 10)
 
         const tourBookings = await TourBooking.find({
             userId,
