@@ -23,6 +23,7 @@ import dashboardRoutes from "./routes/dashboardRoutes.js";
 import reviewRoute from "./routes/reviewRoute.js";
 import paypalRoute from "./routes/paypalRoute.js";
 import stripeRoute from "./routes/stripeRoute.js";
+import payosRoute from "./routes/payosRoute.js"
 import { handleStripeWebhook } from "./controllers/stripeController.js";
 
 import hotelBookingRoute from "./routes/hotelBookingRoute.js";
@@ -102,6 +103,7 @@ app.use("/api/reviews", reviewRoute);
 console.log("- /api/reviews");
 app.use("/api/paypal", paypalRoute);
 app.use("/api/stripe", stripeRoute);
+app.use('/api/payos', payosRoute)
 
 app.use((req, res) => {
     console.log("404 Not Found:", req.method, req.url);

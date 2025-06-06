@@ -2,6 +2,8 @@ import HotelBooking from "../models/hotelBooking.js";
 import Review from "../models/review.js";
 import TourBooking from "../models/tourBooking.js"
 import cloudinary from "../utils/cloudinary.js";
+import Tour from '../models/tour.js'
+import Hotel from '../models/hotel.js'
 
 const addRevirew = async (req, res) => {
     try {
@@ -12,7 +14,7 @@ const addRevirew = async (req, res) => {
         const newReview = Review({
             userId,
             rating,
-            comment,
+            comment: comment || "",
             images: images || [],
             reviewableType,
             reviewableId
@@ -35,6 +37,19 @@ const addRevirew = async (req, res) => {
             }
             booking.isReviewed = "yes";
             await booking.save();
+        }
+        const allReviews = await Review.find({ reviewableType, reviewableId });
+        const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
+        const avgRating = totalRating / allReviews.length;
+        if (reviewableType === 'Hotel') {
+            await Hotel.findByIdAndUpdate(reviewableId, {
+                averageRating: avgRating
+            });
+        }
+        if (reviewableType === 'Tour') {
+            await Tour.findByIdAndUpdate(reviewableId, {
+                avgRating: avgRating
+            });
         }
 
         res.status(201).json(newReview);
