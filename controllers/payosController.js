@@ -14,7 +14,7 @@ dotenv.config();
 const CLIENT_ID = process.env.PAYOS_CLIENT_ID
 const API_KEY = process.env.PAYOS_API_KEY
 const CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY
-const APP_URL = 'http://localhost:5173'
+const APP_URL = process.env.CLIENT_URL // 'http://localhost:5173'
 
 const payOS = new PayOS(
     CLIENT_ID,
