@@ -384,111 +384,115 @@ const deleteRoomType = async (req, res) => {
         res.status(500).json({ error: "Lỗi server" });
     }
 };
-
 const deleteHotel = async (req, res) => {
     try {
         const { hotelId } = req.params;
         if (!hotelId)
             return res.status(400).json({ error: "Thiếu thông tin bắt buộc" });
+
         const hotel = await Hotel.findById(hotelId);
         if (!hotel)
             return res.status(404).json({ error: "Khách sạn không tồn tại" });
 
-        //Xoá ảnh của khách sạn trên cloudinary
+        // Xoá ảnh của khách sạn trên Cloudinary
         if (Array.isArray(hotel.img)) {
             for (const publicId of hotel.img) {
-                await cloudinary.uploader.destroy(publicId);
-            }
-        }
-        //Xoá ảnh trong roomType trên cloudinary
-        for (const roomTypeId of hotel.roomTypes) {
-            const roomType = await HotelRoomType.findById(roomTypeId);
-            if (roomType && Array.isArray(roomType.img)) {
-                for (const publicId of roomType.img) {
+                try {
                     await cloudinary.uploader.destroy(publicId);
+                } catch (err) {
+                    console.error(`Không xoá được ảnh khách sạn: ${publicId}`, err);
                 }
             }
         }
 
+        // Xoá ảnh của từng loại phòng
+        for (const roomTypeId of hotel.roomTypes) {
+            try {
+                const roomType = await HotelRoomType.findById(roomTypeId);
+                if (roomType && Array.isArray(roomType.img)) {
+                    for (const publicId of roomType.img) {
+                        try {
+                            await cloudinary.uploader.destroy(publicId);
+                        } catch (err) {
+                            console.error(`Không xoá được ảnh roomType: ${publicId}`, err);
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error(`Không tìm được roomType: ${roomTypeId}`, err);
+            }
+        }
+
         await HotelRoomType.deleteMany({ _id: { $in: hotel.roomTypes } });
+
         await Hotel.findByIdAndDelete(hotelId);
+
         res.status(200).json({ message: "Xóa khách sạn thành công" });
-    }
-    catch (error) {
-        console.log(error);
+    } catch (error) {
+        console.error("Error delete hotel:", error);
         res.status(500).json({ error: "Lỗi server" });
     }
-}
+};
 
+// const getSearchHotelSuggestions = async (req, res) => {
+//     try {
+//         const { key } = req.query;
+//         // const searchKey = key.trim();
+//         const cities = await City.aggregate([
+//             {
+//                 $search: {
+//                     index: "search_city",
+//                     text: {
+//                         query: key,
+//                         path: ["name"],
+//                         fuzzy: {},
+//                     },
+//                 },
+//             },
+//             {
+//                 $limit: 3,
+//             },
+//             {
+//                 $project: {
+//                     _id: 1,
+//                     name: 1,
+//                     stype: { $literal: "city" },
+//                 },
+//             },
+//         ]);
+
+//         res.status(200).json({ results: cities })
+//     }
+//     catch (error) {
+//         console.log(error);
+//         res.status(500).json({ error: "Lỗi server" });
+//     }
+// }
 const getSearchHotelSuggestions = async (req, res) => {
     try {
         const { key } = req.query;
-        // const searchKey = key.trim();
-        const cities = await City.aggregate([
-            {
-                $search: {
-                    index: "search_city",
-                    text: {
-                        query: key,
-                        path: ["name"],
-                        fuzzy: {},
-                    },
-                },
-            },
-            {
-                $limit: 3,
-            },
-            {
-                $project: {
-                    _id: 1,
-                    name: 1,
-                    stype: { $literal: "city" },
-                },
-            },
-        ]);
+        if (!key) {
+            return res.status(400).json({ error: "Missing search key" });
+        }
 
-        // const hotels = await Hotel.aggregate([
-        //     {
-        //         $search: {
-        //             index: "search_hotel",
-        //             text: {
-        //                 query: key,
-        //                 path: ["name", "address"],
-        //                 fuzzy: {},
-        //             },
-        //         },
-        //     },
-        //     {
-        //         $limit: 1,
-        //     },
-        //     {
-        //         $lookup: {
-        //             from: "cities",
-        //             localField: "city",
-        //             foreignField: "_id",
-        //             as: "cityDetails",
-        //         },
-        //     },
-        //     {
-        //         $project: {
-        //             _id: 1,
-        //             name: 1,
-        //             city: 1,
-        //             cityName: { $arrayElemAt: ["$cityDetails.name", 0] },
-        //             stype: { $literal: "hotel" },
-        //         },
-        //     },
-        // ]);
+        const regex = new RegExp(key.trim(), "i");
 
-        // const mergedResults = [...cities, ...hotels]
-        // res.status(200).json({ results: mergedResults });
-        res.status(200).json({ results: cities })
-    }
-    catch (error) {
+        const cities = await City.find({ name: { $regex: regex } })
+            .limit(3)
+            .select({ _id: 1, name: 1 })
+            .lean();
+
+        const results = cities.map(city => ({
+            ...city,
+            stype: "city",
+        }));
+
+        res.status(200).json({ results });
+    } catch (error) {
         console.log(error);
         res.status(500).json({ error: "Lỗi server" });
     }
-}
+};
 
 const getSearchHotelResults = async (req, res) => {
     try {
@@ -678,7 +682,7 @@ const getHotels = async (req, res) => {
         } = req.query;
 
         const pageNumber = Number(page) || 1;
-        const pageSize = Number(limit) || 10;
+        const pageSize = Number(limit) || 6;
         const skip = (pageNumber - 1) * pageSize;
 
         let hotels = await Hotel.find()
