@@ -326,7 +326,7 @@ const getSearchResults = async (req, res) => {
         }
 
         const pageNumber = Number(req.query.page) || 1;
-        const limit = Number(req.query.pageSize) || 1;
+        const limit = Number(req.query.pageSize) || 6;
         1;
         const skip = (pageNumber - 1) * limit;
 
