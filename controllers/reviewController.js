@@ -1,13 +1,14 @@
 import HotelBooking from "../models/hotelBooking.js";
 import Review from "../models/review.js";
-import TourBooking from "../models/tourBooking.js"
+import TourBooking from "../models/tourBooking.js";
 import cloudinary from "../utils/cloudinary.js";
-import Tour from '../models/tour.js'
-import Hotel from '../models/hotel.js'
+import Tour from "../models/tour.js";
+import Hotel from "../models/hotel.js";
 
 const addRevirew = async (req, res) => {
     try {
-        const { userId, rating, comment, images, reviewableType, reviewableId, bookingId } = req.body;
+        const { userId, rating, comment, images, reviewableType, reviewableId, bookingId } =
+            req.body;
         if (!userId || !rating || !reviewableType || !reviewableId) {
             return res.status(400).json({ message: "Missing required fields" });
         }
@@ -17,11 +18,11 @@ const addRevirew = async (req, res) => {
             comment: comment || "",
             images: images || [],
             reviewableType,
-            reviewableId
-        })
+            reviewableId,
+        });
         await newReview.save();
 
-        if (reviewableType === 'Hotel') {
+        if (reviewableType === "Hotel") {
             const booking = await HotelBooking.findById(bookingId);
             if (!booking) {
                 return res.status(404).json({ message: "Booking not found" });
@@ -30,7 +31,7 @@ const addRevirew = async (req, res) => {
             await booking.save();
         }
 
-        if (reviewableType === 'Tour') {
+        if (reviewableType === "Tour") {
             const booking = await TourBooking.findById(bookingId);
             if (!booking) {
                 return res.status(404).json({ message: "Booking not found" });
@@ -41,14 +42,14 @@ const addRevirew = async (req, res) => {
         const allReviews = await Review.find({ reviewableType, reviewableId });
         const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
         const avgRating = totalRating / allReviews.length;
-        if (reviewableType === 'Hotel') {
+        if (reviewableType === "Hotel") {
             await Hotel.findByIdAndUpdate(reviewableId, {
-                averageRating: avgRating
+                averageRating: avgRating,
             });
         }
-        if (reviewableType === 'Tour') {
+        if (reviewableType === "Tour") {
             await Tour.findByIdAndUpdate(reviewableId, {
-                avgRating: avgRating
+                avgRating: avgRating,
             });
         }
 
@@ -57,7 +58,7 @@ const addRevirew = async (req, res) => {
         console.error("Error adding review:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 const updateReview = async (req, res) => {
     try {
@@ -103,7 +104,7 @@ const deleteReview = async (req, res) => {
         console.error("Error deleting review:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 const getReviewsByReviewableId = async (req, res) => {
     try {
@@ -115,13 +116,13 @@ const getReviewsByReviewableId = async (req, res) => {
 
         const reviews = await Review.find({
             reviewableId,
-            reviewableType
-        }).populate("userId", "firstName lastName email profilePicture")
-            // .populate({
-            //     path: 'reviewableId',
-            //     select: 'name',
-            //     model: reviewableType // e.g., "Hotel"
-            // });
+            reviewableType,
+        }).populate("userId", "firstName lastName email profilePicture");
+        // .populate({
+        //     path: 'reviewableId',
+        //     select: 'name',
+        //     model: reviewableType // e.g., "Hotel"
+        // });
 
         let avgRating = 0;
         if (reviews.length > 0) {
@@ -131,7 +132,7 @@ const getReviewsByReviewableId = async (req, res) => {
 
         res.status(200).json({
             averageRating: avgRating,
-            reviews
+            reviews,
         });
     } catch (error) {
         console.error("Error fetching reviews:", error);
@@ -150,9 +151,9 @@ const getOrderCanReview = async (req, res) => {
 
         const bookings = await HotelBooking.find({
             userId,
-            bookingStatus: { $nin: ['pending', 'cancelled'] },
+            bookingStatus: { $nin: ["pending", "cancelled"] },
             isReviewed: { $ne: "yes" },
-            checkout: { $lte: today }
+            checkout: { $lte: today },
         }).populate("hotelId", "name img");
 
         res.status(200).json(bookings);
@@ -160,7 +161,7 @@ const getOrderCanReview = async (req, res) => {
         console.error("Error fetching orders for review:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 const getTourOrderCanReview = async (req, res) => {
     try {
@@ -169,22 +170,21 @@ const getTourOrderCanReview = async (req, res) => {
             return res.status(400).json({ message: "Missing userId" });
         }
 
-        const today = new Date(2025, 5, 10)
+        const today = new Date(2025, 5, 10);
 
         const tourBookings = await TourBooking.find({
             userId,
-            bookingStatus: { $nin: ['pending', 'cancelled'] },
+            bookingStatus: { $nin: ["pending", "cancelled"] },
             isReviewed: { $ne: "yes" },
-            useDate: { $lte: today }
+            useDate: { $lte: today },
         }).populate("tourId", "name images");
 
         res.status(200).json(tourBookings);
-
     } catch (error) {
         console.error("Error fetching tour orders for review:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
 
 const getMyReviews = async (req, res) => {
     try {
@@ -202,7 +202,55 @@ const getMyReviews = async (req, res) => {
         console.error("Error fetching my reviews:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
+
+const getReviewByCity = async (req, res) => {
+    try {
+        console.log(req.query.cityId);
+        const tours = await Tour.find({
+            city: req.query.cityId,
+        }).select("_id name");
+
+        const tourMap = new Map();
+        const tourIds = tours.map((t) => {
+            tourMap.set(t._id.toString(), {name: t.name, id: t._id} ); // để tra ngược tên sau này
+            return t._id;
+        });
+        console.log(tours);
+        const reviews = await Review.find({
+            reviewableId: { $in: tourIds },
+            reviewableType: "Tour",
+        }).populate("userId", "firstName lastName email profilePicture");
+
+        const result = reviews.map((r) => ({
+            tour: tourMap.get(r.reviewableId.toString()), // tra tên tour từ map
+            review: {
+                _id: r._id,
+                rating: r.rating,
+                content: r.comment,
+                createdAt: r.createdAt,
+                images: r.images,
+            },
+            user: r.userId,
+        }));
+
+        const latestByUser = new Map();
+
+        for (const item of result) {
+            const userId = item.user._id;
+            const existing = latestByUser.get(userId);
+
+            if (!existing || new Date(item.review.createdAt) > new Date(existing.review.createdAt)) {
+                latestByUser.set(userId, item);
+            }
+        }
+
+        const latestReview = Array.from(latestByUser.values()).slice(0, 4);
+        res.status(200).json({ success: true, data: latestReview });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 export {
     addRevirew,
@@ -211,5 +259,6 @@ export {
     getReviewsByReviewableId,
     getOrderCanReview,
     getTourOrderCanReview,
-    getMyReviews
+    getMyReviews,
+    getReviewByCity,
 };

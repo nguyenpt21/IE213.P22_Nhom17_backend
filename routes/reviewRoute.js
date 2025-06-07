@@ -6,13 +6,15 @@ import {
     getReviewsByReviewableId,
     getOrderCanReview,
     getTourOrderCanReview,
-    getMyReviews
+    getMyReviews,
+    getReviewByCity
 } from "../controllers/reviewController.js";
 
 const router = express.Router();
 
 router.get("/", getReviewsByReviewableId);
 router.get("/my-reviews", getMyReviews);
+router.get("/review-city", getReviewByCity)
 router.post("/", addRevirew);
 router.put("/:id", updateReview);
 router.delete("/:id", deleteReview);
