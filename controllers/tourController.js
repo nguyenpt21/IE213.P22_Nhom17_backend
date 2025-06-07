@@ -29,9 +29,7 @@ const createTour = async (req, res) => {
             !tickets ||
             tickets.length === 0
         ) {
-            return res
-                .status(400)
-                .json({ error: "Thiếu thông tin bắt buộc hoặc chưa có vé" });
+            return res.status(400).json({ error: "Thiếu thông tin bắt buộc hoặc chưa có vé" });
         }
 
         const ticketIds = [];
@@ -141,23 +139,17 @@ const updateTicketInTour = async (req, res) => {
             return res.status(400).json({ error: "Tour không tồn tại" });
         }
 
-        const ticketIndex = tour.tickets.findIndex(
-            (id) => id.toString() === ticketId
-        );
+        const ticketIndex = tour.tickets.findIndex((id) => id.toString() === ticketId);
         if (ticketIndex === -1) {
             return res.status(400).json({ error: "Vé không có trong tour" });
         }
 
         // Cập nhật vé
         const { createdAt, updatedAt, ...safeBody } = req.body;
-        const updatedTicket = await Ticket.findByIdAndUpdate(
-            ticketId,
-            safeBody,
-            {
-                new: true,
-                runValidators: true,
-            }
-        );
+        const updatedTicket = await Ticket.findByIdAndUpdate(ticketId, safeBody, {
+            new: true,
+            runValidators: true,
+        });
 
         if (!updatedTicket) {
             return res.status(404).json({ message: "Vé không tồn tại" });
@@ -254,25 +246,9 @@ const getSearchSuggestions = async (req, res) => {
             },
         ]);
 
-        const cities = await City.aggregate([
-            {
-                $search: {
-                    index: "search_city",
-                    text: {
-                        query: q,
-                        path: ["name"],
-                    },
-                },
-            },
-            {
-                $project: {
-                    _id: 1,
-                    name: 1,
-                },
-            },
-        ]);
-
-        console.log(tours);
+        const cities = await City.find({
+            name: { $regex: q, $options: "i" },
+        }).select("_id name");
 
         res.status(200).json({ tours, cities });
     } catch (error) {
@@ -283,15 +259,7 @@ const getSearchSuggestions = async (req, res) => {
 
 const getSearchResults = async (req, res) => {
     try {
-        const {
-            query,
-            minPrice,
-            maxPrice,
-            category,
-            language,
-            duration,
-            sort,
-        } = req.query;
+        const { query, minPrice, maxPrice, category, language, duration, sort } = req.query;
 
         let matchStage = {};
         if (query) {
@@ -315,10 +283,8 @@ const getSearchResults = async (req, res) => {
                 ...(filterStage.$match.fromPrice || {}),
                 $lte: Number(maxPrice),
             };
-        if (category)
-            filterStage.$match.category = { $in: category.split(",") };
-        if (language)
-            filterStage.$match.languageService = { $in: language.split(",") };
+        if (category) filterStage.$match.category = { $in: category.split(",") };
+        if (language) filterStage.$match.languageService = { $in: language.split(",") };
         if (duration) {
             switch (duration) {
                 case "0-3": {
@@ -360,7 +326,8 @@ const getSearchResults = async (req, res) => {
         }
 
         const pageNumber = Number(req.query.page) || 1;
-        const limit = Number(req.query.pageSize) || 1; 1;
+        const limit = Number(req.query.pageSize) || 1;
+        1;
         const skip = (pageNumber - 1) * limit;
 
         const results = await Tour.aggregate([
@@ -417,7 +384,7 @@ const getTours = async (req, res) => {
             page,
             limit,
             sort,
-            cityId,
+            cityId
         } = req.query;
 
         let filter = {};
@@ -491,10 +458,7 @@ const getTours = async (req, res) => {
             }
         }
 
-        const tours = await Tour.find(filter)
-            .sort(sortOptions)
-            .skip(skip)
-            .limit(pageSize);
+        const tours = await Tour.find(filter).sort(sortOptions).skip(skip).limit(pageSize);
         const totalTours = await Tour.countDocuments(filter);
 
         res.status(200).json({
@@ -532,15 +496,9 @@ const getTourStats = async (req, res) => {
         const totalCount = await Tour.countDocuments();
 
         const [topRated, cheapest, newest] = await Promise.all([
-            Tour.find()
-                .sort({ averageRating: -1 })
-                .limit(3)
-                .select("name _id"),
+            Tour.find().sort({ averageRating: -1 }).limit(3).select("name _id"),
             Tour.find().sort({ fromPrice: 1 }).limit(3).select("name _id"),
-            Tour.find()
-                .sort({ createdAt: -1 })
-                .limit(3)
-                .select("name _id createdAt"),
+            Tour.find().sort({ createdAt: -1 }).limit(3).select("name _id createdAt"),
         ]);
 
         res.json({
@@ -566,5 +524,5 @@ export {
     getSearchResults,
     getTours,
     getTourDetail,
-    getTourStats
+    getTourStats,
 };

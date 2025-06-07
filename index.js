@@ -26,6 +26,8 @@ import stripeRoute from "./routes/stripeRoute.js";
 import { handleStripeWebhook } from "./controllers/stripeController.js";
 
 import hotelBookingRoute from "./routes/hotelBookingRoute.js";
+import { chat } from "./controllers/chatbotController.js"
+import { protect } from "./middleware/authMiddleware.js";
 
 dotenv.config({ path: process.cwd() + "/.env" });
 
@@ -65,7 +67,7 @@ app.post(
 
 app.use(express.json({ limit: "50mb" }));
 
-connectDB();
+await connectDB();
 
 initializeAdmin();
 
@@ -102,6 +104,7 @@ app.use("/api/reviews", reviewRoute);
 console.log("- /api/reviews");
 app.use("/api/paypal", paypalRoute);
 app.use("/api/stripe", stripeRoute);
+app.post("/api/chatbot", protect, chat)
 
 app.use((req, res) => {
     console.log("404 Not Found:", req.method, req.url);
