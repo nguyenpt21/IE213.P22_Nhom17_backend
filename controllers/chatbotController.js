@@ -5,7 +5,8 @@ const chat = async (req, res) => {
     const threadId = req.user._id.toString();
     const { input } = req.body;
     try {
-        const response = await callAgent(input, threadId);
+        let response = await callAgent(input, threadId);
+        response = response.replace(/\*\*(.*?)\*\*/g, "$1");
         
         res.json({ response });
     } catch (error) {
