@@ -15,10 +15,11 @@ const tourData = await Tour.find();
 const db = mongoose.connection;
 
 const collection = db.collection("tour_vectors");
-await collection.deleteMany({})
-const embedder = new OpenAIEmbeddings();
+await collection.deleteMany({});
+const embedder = new OpenAIEmbeddings({
+    modelName: "text-embedding-3-small",
+});
 
-// 4. Tạo vector từ mô tả và lưu
 for (const record of tourData) {
     const cleanExperiences = htmlToText(record.experiences || "", {
         wordwrap: false,
@@ -40,9 +41,9 @@ for (const record of tourData) {
         embedder,
         {
             collection,
-            indexName: "vector_index", 
-            textKey: "embedding_text", 
-            embeddingKey: "embedding", 
+            indexName: "vector_index",
+            textKey: "embedding_text",
+            embeddingKey: "embedding",
         }
     );
 

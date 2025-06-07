@@ -25,18 +25,23 @@ export async function callAgent(query, threadId) {
 
     const tourLookupTool = tool(
         async ({ query, n = 5 }) => {
-            console.log(query)
-            const vectorStore = new MongoDBAtlasVectorSearch(new OpenAIEmbeddings(), {
-                collection: mongoose.connection.collection("tour_vectors"),
-                indexName: "vector_index",
-                textKey: "embedding_text",
-                embeddingKey: "embedding",
-            });
+            console.log(query);
+            const vectorStore = new MongoDBAtlasVectorSearch(
+                new OpenAIEmbeddings({
+                    modelName: "text-embedding-3-small",
+                }),
+                {
+                    collection: mongoose.connection.collection("tour_vectors"),
+                    indexName: "vector_index",
+                    textKey: "embedding_text",
+                    embeddingKey: "embedding",
+                }
+            );
 
             console.log("Employee lookup tool called");
 
             const results = await vectorStore.similaritySearchWithScore(query, n);
-            console.log(results)
+            console.log(results);
             return JSON.stringify(results);
         },
         {
